@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.questapp.entities.User;
 import com.example.questapp.requests.UserRequest;
+import com.example.questapp.responses.AuthResponse;
 import com.example.questapp.security.JwtTokenProvider;
 import com.example.questapp.services.UserService;
 
@@ -42,36 +43,42 @@ public class AuthController {
 		this.jwtTokenProvider=jwtTokenProvider;
 	}
 	
-	 @PostMapping("/login")
-	    public ResponseEntity<String> login(@RequestBody UserRequest loginRequest) {
-	        logger.debug("Login attempt with username: {}", loginRequest.getUserName());
+	@PostMapping("/login")
+    public AuthResponse login(@RequestBody UserRequest loginRequest) {
+		logger.debug("Login attempt with username: {}", loginRequest.getUserName());
 
-	        try {
-	            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-	                    loginRequest.getUserName(), loginRequest.getPassword());
-	            Authentication auth = authenticationManager.authenticate(authToken);
-	            SecurityContextHolder.getContext().setAuthentication(auth);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                loginRequest.getUserName(), loginRequest.getPassword());
+        Authentication auth = authenticationManager.authenticate(authToken);
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
-	            String jwtToken = jwtTokenProvider.generateJwtToken(auth);
-	            logger.info("Login successful for username: {}", loginRequest.getUserName());
-
-	            return ResponseEntity.ok("Bearer " + jwtToken);
-	        } catch (Exception e) {
-	            logger.error("Login failed for username: {}. Error: {}", loginRequest.getUserName(), e.getMessage());
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.toString());
-	        }
-	    }
+        String jwtToken = jwtTokenProvider.generateJwtToken(auth);
+        logger.info("Login successful for username: {}", loginRequest.getUserName());
+        User user= userService.getOneUserByName(loginRequest.getUserName());
+        AuthResponse authResponse = new AuthResponse();
+        
+        authResponse.setMassage("Bearer"+jwtToken);
+        authResponse.setUserId(user.getId());
+        return authResponse ;    
+	 	 
+    }
 	
-	 @PostMapping("/register")
-	 public ResponseEntity<String> register(@RequestBody UserRequest registerRequest){
-	     if(userService.getOneUserByName(registerRequest.getUserName()) != null)
-	         return new ResponseEntity<>("Username already in use", HttpStatus.BAD_REQUEST);
-	     
+	@PostMapping("/register")
+	 public ResponseEntity<AuthResponse> register(@RequestBody UserRequest registerRequest){
+        AuthResponse authResponse = new AuthResponse();
+		 if(userService.getOneUserByName(registerRequest.getUserName()) != null) {
+			 authResponse.setMassage("Username already in use");
+	         return new ResponseEntity<>(authResponse, HttpStatus.BAD_REQUEST);
+		 }
 	     User user = new User();
 	     user.setUserName(registerRequest.getUserName());
 	     user.setPassword(passwordEncoder.encode(registerRequest.getPassword())); // Şifre burada şifrelenecek
 	     userService.saveOneUser(user);
-	     return new ResponseEntity<>("User successfully registered", HttpStatus.CREATED);
+		 authResponse.setMassage("User successfully registered");
+	     return new ResponseEntity<>(authResponse, HttpStatus.CREATED);	    
 	 }
+	
+	
+	 
 		
 }
