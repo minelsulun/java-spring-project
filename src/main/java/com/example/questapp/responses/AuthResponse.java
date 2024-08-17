@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class AuthResponse {
-	String massage;
+	String message;
 	Long userId;
 }

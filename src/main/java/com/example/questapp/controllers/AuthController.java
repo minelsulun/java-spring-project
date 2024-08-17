@@ -57,7 +57,7 @@ public class AuthController {
         User user= userService.getOneUserByName(loginRequest.getUserName());
         AuthResponse authResponse = new AuthResponse();
         
-        authResponse.setMassage("Bearer"+jwtToken);
+        authResponse.setMessage("Bearer "+jwtToken);
         authResponse.setUserId(user.getId());
         return authResponse ;    
 	 	 
@@ -67,14 +67,15 @@ public class AuthController {
 	 public ResponseEntity<AuthResponse> register(@RequestBody UserRequest registerRequest){
         AuthResponse authResponse = new AuthResponse();
 		 if(userService.getOneUserByName(registerRequest.getUserName()) != null) {
-			 authResponse.setMassage("Username already in use");
+			 authResponse.setMessage("Username already in use");
 	         return new ResponseEntity<>(authResponse, HttpStatus.BAD_REQUEST);
 		 }
 	     User user = new User();
 	     user.setUserName(registerRequest.getUserName());
 	     user.setPassword(passwordEncoder.encode(registerRequest.getPassword())); // Şifre burada şifrelenecek
 	     userService.saveOneUser(user);
-		 authResponse.setMassage("User successfully registered");
+	     
+		 authResponse.setMessage("User successfully registered");
 	     return new ResponseEntity<>(authResponse, HttpStatus.CREATED);	    
 	 }
 	
