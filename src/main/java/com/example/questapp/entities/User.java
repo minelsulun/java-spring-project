@@ -19,6 +19,10 @@ public class User {
 	public String userName;
 	public String password;
 	
+	private int avatar;
+	
+	private String userInfo;
+	
 	
 	
 

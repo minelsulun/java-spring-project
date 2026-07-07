@@ -11,6 +11,8 @@ import com.example.questapp.entities.User;
 import com.example.questapp.repos.CommentRepository;
 import com.example.questapp.requests.CommentCreateRequest;
 import com.example.questapp.requests.CommentUpdateRequest;
+import com.example.questapp.responses.CommentResponse;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService {
@@ -25,15 +27,18 @@ public class CommentService {
 		this.postService= postService;
 	}
 
-	public List<Comment> getAllCommentsWithParam(Optional<Long> userId, Optional<Long> postId) {
+	public List<CommentResponse> getAllCommentsWithParam(Optional<Long> userId, Optional<Long> postId) {
+		List<Comment> comments;
 		if(userId.isPresent() && postId.isPresent()) {
-			return commentRepository.findByUserIdAndPostId(userId.get(), postId.get());		
+			comments = commentRepository.findByUserIdAndPostId(userId.get(), postId.get());		
 		}else if(userId.isPresent()) {
-			return commentRepository.findByUserId(userId.get());
-		}else if(postId.isPresent())
-			return commentRepository.findByPostId(postId.get());
-		else
-			return commentRepository.findAll();
+			comments = commentRepository.findByUserId(userId.get());
+		}else if(postId.isPresent()) {
+			comments = commentRepository.findByPostId(postId.get());
+		}else {
+			comments = commentRepository.findAll();
+		}
+		return comments.stream().map(comment -> new CommentResponse(comment)).collect(Collectors.toList());
 	}
 
 	public Comment getOneCommentById(Long commentId) {
